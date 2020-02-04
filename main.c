@@ -3,12 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char equationIn[100]="(3+3)/(3*3)\0";
+char equationIn[100]="(39+3)/(3*3)\0";
 char equationOut[100]="";
 char equationStack[100];
 int outPointer=-1;
 int stackPointer=-1;
 char bodmasStack[100]={"-+*/^\0"};
+
+void commaSeparate(){
+    equationOut[++outPointer]=',';
+}
 
 int getPrecidenceOfTop(){
     for (int i= 0; bodmasStack[i]!='\0'; i++)
@@ -31,6 +35,7 @@ int getPrecidenceOf(char c){
 
 void popFromStackToOut(){
     if(stackPointer>-1){
+        commaSeparate();
         equationOut[++outPointer]=equationStack[stackPointer--];
     }
     else{
@@ -52,9 +57,7 @@ void copyRemainingEnclosedStackOntoOutput(){
     stackPointer--;
 }
 
-void commaSeparate(){
-    equationOut[++outPointer]=',';
-}
+
 
 void pushToStack(char ch){
 equationStack[++stackPointer] = ch;
@@ -80,6 +83,7 @@ void calculateEquation(){
         for (int ii= 0; bodmasStack[ii]!='\0'; ii++)
             {   //if is an operator
                 if(equationIn[i]==bodmasStack[ii]){
+                    commaSeparate();
                     for(int iii=stackPointer;iii>=0;iii--){
                         //if precidence of stack is higher
                         if(getPrecidenceOf(equationIn[i])<getPrecidenceOfTop()){
