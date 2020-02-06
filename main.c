@@ -9,7 +9,7 @@ Add algorithm to corresponding switch case in the function:   void operatorOnRPN
 #include <stdlib.h>
 
 
-char equationIn[maxEquationLength]="s5\0";
+char equationIn[maxEquationLength]="32*8/4-6*10@4\0";
 char equationRPN[maxEquationLength]="";
 int outPointer=-1;
 char equationStack[maxEquationLength];
@@ -42,7 +42,6 @@ int getPrecidenceOf(char c){
 
 void popFromStackToOut(){
     if(stackPointer>-1){
-        commaSeparate();
         equationRPN[++outPointer]=equationStack[stackPointer--];
     }
     else{
@@ -53,13 +52,17 @@ void popFromStackToOut(){
 
 void copyRemainingStackOntoOutput(){
     for(;stackPointer>=0;){
+        commaSeparate();
         popFromStackToOut();
+
     }
 }
 
 void copyRemainingEnclosedStackOntoOutput(){
     for(;equationStack[stackPointer]!='(';){
+
         popFromStackToOut();
+
     }
     stackPointer--;
 }
@@ -83,8 +86,11 @@ void calculateRPN(){
 //for each char in equation
     for (int i = 0; equationIn[i]!='\0'; i++)
     {
+        //printf("RPNStack: %s EP: %d\n",equationRPN,outPointer);
+
         //if is number
         if(((equationIn[i]>=48)&&(equationIn[i]<=57))||(equationIn[i]==46)){
+            
             //push number to out
             equationRPN[++outPointer]=equationIn[i];
         }
@@ -97,6 +103,8 @@ void calculateRPN(){
                         if(getPrecidenceOf(equationIn[i])<getPrecidenceOfTop()){
                             //pop off stac
                             popFromStackToOut();
+                            commaSeparate();
+
                         }
                         //otherwise end loop
                         else{
@@ -106,6 +114,7 @@ void calculateRPN(){
                     }
                     //put op onto stack
                     pushToStack(equationIn[i]);
+
                 }
             }
         if(equationIn[i]=='('){
@@ -149,7 +158,7 @@ void operatorOnRPNStack(char op){
             RPNStackPointer--;
             break;
         case '-':
-            RPNStack[RPNStackPointer-1]=RPNStack[RPNStackPointer] - RPNStack[RPNStackPointer-1];
+            RPNStack[RPNStackPointer-1]= RPNStack[RPNStackPointer-1] - RPNStack[RPNStackPointer];
             RPNStackPointer--;        
             break;
         default:
@@ -164,7 +173,7 @@ long double computeRPN(){
     char * ptr;
     while(token!=NULL){
         //if number
-        if(((token[0]>=48)&&(token[0]<=57))||(token[0]==46)){
+        if(((token[0]>='0')&&(token[0]<='9'))||(token[0]=='.')){
             temp = strtold(token, &ptr);
             RPNStack[++RPNStackPointer]=temp;
             //printf( " %.10Le\n", temp); //printing each token
@@ -179,11 +188,11 @@ long double computeRPN(){
 }
 
 
-
-
 int main(){
     printf("Question: %s\n",equationIn);
     calculateRPN();
+    //printf("RPNStack: %s EP: %d\n",equationRPN,outPointer);
+
 
     long double answer = computeRPN();
     printf("Answer: %Le\n",*RPNStack);
