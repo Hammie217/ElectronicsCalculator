@@ -1,17 +1,25 @@
-#include <stdio.h>
+/*
+Adding a new function:
+Add value to the bodmas stack Line (remeber these don't have to be visible characters and can be special character codes):   char *bodmasStack={};
+Add algorithm to corresponding switch case in the function:   void operatorOnRPNStack(char op){
+*/
+#define maxEquationLength 100
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-char equationIn[100]="(39+3)/(3*3)\0";
-char equationOut[100]="";
-char equationStack[100];
+
+char equationIn[maxEquationLength]="s5\0";
+char equationRPN[maxEquationLength]="";
 int outPointer=-1;
+char equationStack[maxEquationLength];
 int stackPointer=-1;
-char bodmasStack[100]={"-+*/^\0"};
+char *bodmasStack={"-+*/sc^@\0"};
+long double RPNStack[maxEquationLength]; 
+int RPNStackPointer=-1;
 
 void commaSeparate(){
-    equationOut[++outPointer]=',';
+    equationRPN[++outPointer]=',';
 }
 
 int getPrecidenceOfTop(){
@@ -20,7 +28,6 @@ int getPrecidenceOfTop(){
         if(equationStack[stackPointer]==bodmasStack[i])
             return i;
     }
-
     return -1;
 }
 
@@ -36,7 +43,7 @@ int getPrecidenceOf(char c){
 void popFromStackToOut(){
     if(stackPointer>-1){
         commaSeparate();
-        equationOut[++outPointer]=equationStack[stackPointer--];
+        equationRPN[++outPointer]=equationStack[stackPointer--];
     }
     else{
         printf("Error popping from empty stack");
@@ -60,7 +67,7 @@ void copyRemainingEnclosedStackOntoOutput(){
 
 
 void pushToStack(char ch){
-equationStack[++stackPointer] = ch;
+    equationStack[++stackPointer] = ch;
 }
 
 void onLeftBracket(){
@@ -71,14 +78,15 @@ void onRightBracket(){
     copyRemainingEnclosedStackOntoOutput();
 }
 
-void calculateEquation(){
+
+void calculateRPN(){
 //for each char in equation
     for (int i = 0; equationIn[i]!='\0'; i++)
     {
         //if is number
-        if((equationIn[i]>48)&&(equationIn[i]<=57)){
+        if(((equationIn[i]>=48)&&(equationIn[i]<=57))||(equationIn[i]==46)){
             //push number to out
-            equationOut[++outPointer]=equationIn[i];
+            equationRPN[++outPointer]=equationIn[i];
         }
         for (int ii= 0; bodmasStack[ii]!='\0'; ii++)
             {   //if is an operator
@@ -110,14 +118,75 @@ void calculateEquation(){
     copyRemainingStackOntoOutput();
 }
 
+void pushToRPNStack(long double value){
+    RPNStack[++RPNStackPointer] = value;
+}
+
+void operatorOnRPNStack(char op){
+    switch(op){
+        case '@':
+        RPNStack[RPNStackPointer-1]= 1/((1/RPNStack[RPNStackPointer-1])+(1/RPNStack[RPNStackPointer]));//in parallel
+        RPNStackPointer--;
+        break;
+        case '^':
+        break;
+        case 's':
+        //RPNStack[RPNStackPointer]= Math.sine(RPNStack[RPNStackPointer]);//sine
+        break;
+        case 'c':
+        //RPNStack[RPNStackPointer]= Math.cos(RPNStack[RPNStackPointer]);//sine
+        break;
+        case '/':
+            RPNStack[RPNStackPointer-1]= RPNStack[RPNStackPointer-1]/RPNStack[RPNStackPointer];
+            RPNStackPointer--;
+        break;
+        case '*':
+            RPNStack[RPNStackPointer-1]=RPNStack[RPNStackPointer] * RPNStack[RPNStackPointer-1];
+            RPNStackPointer--;
+            break;
+        case '+':
+            RPNStack[RPNStackPointer-1]=RPNStack[RPNStackPointer] + RPNStack[RPNStackPointer-1];
+            RPNStackPointer--;
+            break;
+        case '-':
+            RPNStack[RPNStackPointer-1]=RPNStack[RPNStackPointer] - RPNStack[RPNStackPointer-1];
+            RPNStackPointer--;        
+            break;
+        default:
+        printf("Error operator not found");
+        break;
+    }
+}
+
+long double computeRPN(){
+    long double temp;
+    char * token = strtok(equationRPN, ",");
+    char * ptr;
+    while(token!=NULL){
+        //if number
+        if(((token[0]>=48)&&(token[0]<=57))||(token[0]==46)){
+            temp = strtold(token, &ptr);
+            RPNStack[++RPNStackPointer]=temp;
+            //printf( " %.10Le\n", temp); //printing each token
+        }
+        else{
+            operatorOnRPNStack(*token);
+        }
+        token = strtok(NULL, ",");
+    }
+    //printf("RPNStack: %Le EP: %d\n",*RPNStack,RPNStackPointer);
+    return *RPNStack;
+}
+
+
+
+
 int main(){
+    printf("Question: %s\n",equationIn);
+    calculateRPN();
 
-    calculateEquation();
-    
+    long double answer = computeRPN();
+    printf("Answer: %Le\n",*RPNStack);
 
-    equationOut[++outPointer]='\0';
-    printf("Equation out: %s EP: %d\n",equationOut,outPointer);
-    equationStack[++stackPointer]='\0';
-    printf("Stack: %s, SP: %d\n",equationStack, stackPointer);
     return 0;
 }
